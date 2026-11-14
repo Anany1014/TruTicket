@@ -113,6 +113,35 @@ export default function StatusPage() {
         state: anon ? "ok" : "fail",
         detail: anon ? mask(anon) : "(not set) — the app still works on DEV, because the gateway accepts calls without it",
       });
+
+      // 5. ML Risk Service Health Probe
+      try {
+        const mlStart = Date.now();
+        const mlRes = await fetch("/api/ml/health", { cache: "no-store" });
+        const mlMs = Date.now() - mlStart;
+        if (mlRes.ok) {
+          const mlData = await mlRes.json();
+          push({
+            name: "ML Risk Service (FastAPI)",
+            state: "ok",
+            detail: `HTTP ${mlRes.status} in ${mlMs} ms · Version: ${mlData.version || "1.0.0-rf-hybrid"} · Model: ${mlData.model_loaded ? "Ready (RF 3-Class + Kinematic Rules)" : "Not loaded"}`,
+          });
+        } else {
+          push({
+            name: "ML Risk Service (FastAPI)",
+            state: "fail",
+            detail: `HTTP ${mlRes.status} · ML Service degraded.`,
+            hint: "Run 'npm run dev:ml' to start the FastAPI risk scoring service on port 8000.",
+          });
+        }
+      } catch {
+        push({
+          name: "ML Risk Service (FastAPI)",
+          state: "fail",
+          detail: "Could not reach ML service at http://localhost:8000.",
+          hint: "Run 'npm run dev:ml' to start the FastAPI risk scoring service on port 8000.",
+        });
+      }
     }
 
     run();

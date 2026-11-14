@@ -28,6 +28,8 @@ export async function createOrder(reservationId: string): Promise<OrderCreated> 
  * The hosted payment page (static, from pay-page/). It needs the Razorpay order id and the
  * public key id. The amount comes from the order on Razorpay's side, not from the URL.
  */
+export { evaluateMobileSessionRisk } from "./ml";
+
 export function checkoutPageUrl(razorpayOrderId: string, keyId: string): string {
   if (!PAY_PAGE_URL) {
     throw new Error("Payment page is not set. Add EXPO_PUBLIC_PAY_PAGE_URL to apps/mobile/.env and restart Metro.");

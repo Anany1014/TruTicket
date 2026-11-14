@@ -62,3 +62,5 @@ apps/web/next-env.d.ts
 apps/web/tsconfig.tsbuildinfo
 /supabase
 
+ML Model/web_detection_bot/phase2/data/mouse_movements/bots/mouse_movements_advanced_bots.json
+ML Model/web_detection_bot/phase2/data/mouse_movements/bots/mouse_movements_advanced_bots.json
