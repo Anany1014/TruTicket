@@ -5,7 +5,7 @@
 //   POST { "action": "mint",        "ticket_id" }               -> mint the NFT to the buyer's custodial wallet
 //   POST { "action": "list",        "ticket_id", "ask_minor" }  -> list on-chain (cap enforced there)
 //   POST { "action": "cancel",      "ticket_id" }               -> cancel the on-chain listing
-//   POST { "action": "settle",      "ticket_id", "buyer_user_id" }    -> resale transfer on-chain
+//   POST { "action": "settle",      "ticket_id", "buyer_user_id", "ask_minor"? } -> resale transfer on-chain (lists first if needed)
 //   POST { "action": "allocate",    "ticket_id", "member_user_id" }   -> group zero-price transfer on-chain
 //   POST { "action": "redeem",      "ticket_id" }               -> mark redeemed on-chain (gate VALID)
 //
@@ -217,7 +217,15 @@ Deno.serve(async (req) => {
       if (!listing[3]) {
         const owner = await c.pub.readContract({ address: c.address, abi: TRUTICKET_ABI, functionName: "ownerOf", args: [tokenId] });
         if (owner.toLowerCase() === buyerAddr.toLowerCase()) return json({ ok: true, action, token_id: tokenId.toString(), already: true });
-        throw new ApiError(409, "NOT_LISTED", "No active on-chain listing for this ticket.");
+        // The database already moved the ticket, but the listing never reached the chain (its first try failed).
+        // List it now at the price the buyer paid, then settle. The contract still enforces the cap on the list.
+        const ask = typeof body.ask_minor === "number" ? body.ask_minor : NaN;
+        if (!Number.isInteger(ask) || ask <= 0) throw new ApiError(409, "NOT_LISTED", "No active on-chain listing for this ticket.");
+        try {
+          await writeTx(c, "listForResaleFor", [tokenId, BigInt(ask)]);
+        } catch (e) {
+          return await chainError(e);
+        }
       }
       try {
         const hash = await writeTx(c, "settleResale", [tokenId, buyerAddr]);

@@ -1,24 +1,92 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
 import { canTransact, useAuth } from "../../auth/session";
-import { getEvent } from "../../mock/events";
-import { inr, Listing, MOCK_LISTINGS, maxResalePrice } from "../../mock/resale";
+import { formatRupees, listingLabel, type AppListing } from "../../services/marketplace";
+import { cancelListing, fetchListings, fetchMyListings, startResalePurchase, waitForNewTicket } from "../../services/resale";
+import { fetchMyTickets } from "../../services/tickets";
+import { messageOf } from "../../services/errors";
+import { formatWhen } from "../../services/format";
 import { colors, fontSize, fontWeight, radius, space } from "../../theme";
 
-/** Resale marketplace (mock). Every price is capped by the platform (PRD 6.5). */
+/**
+ * Resale marketplace (PRD 6.5). Every price is capped by the platform: the seller cannot ask more than the cap.
+ * Buying opens the hosted Razorpay page in the browser. The ticket moves to the buyer only after the webhook.
+ */
 export default function Resale() {
   const { session } = useAuth();
-  const [reserved, setReserved] = useState<string | null>(null);
+  const [listings, setListings] = useState<AppListing[]>([]);
+  const [mine, setMine] = useState<AppListing[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  function buy(l: Listing) {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [all, own] = await Promise.all([fetchListings(), fetchMyListings()]);
+      setListings(all);
+      setMine(own);
+    } catch (e) {
+      setError(messageOf(e, "Could not load the marketplace."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (session) void load();
+    }, [session, load]),
+  );
+
+  const mineIds = new Set(mine.map((m) => m.id));
+  const others = listings.filter((l) => !mineIds.has(l.id));
+
+  async function buy(l: AppListing) {
     if (!canTransact(session)) {
       router.push("/verify-gate");
       return;
     }
-    setReserved(l.id);
+    setBusyId(l.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const url = await startResalePurchase(l.id);
+      const before = (await fetchMyTickets().catch(() => [])).length;
+      await WebBrowser.openBrowserAsync(url);
+      const arrived = await waitForNewTicket(before);
+      setNotice(
+        arrived
+          ? "Payment received. The ticket is in My Tickets."
+          : "Payment not confirmed yet. Check My Tickets in a minute. If it did not go through, the listing is free again.",
+      );
+      await load();
+    } catch (e) {
+      setError(messageOf(e, "Could not start the purchase. Try again."));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function take(l: AppListing) {
+    setBusyId(l.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await cancelListing(l.id);
+      setNotice("Listing taken down. The ticket is yours again.");
+      await load();
+    } catch (e) {
+      setError(messageOf(e, "Could not take the listing down."));
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -31,38 +99,60 @@ export default function Resale() {
         Prices are capped at face value × the event cap. The platform sets the cap, not the seller.
       </Text>
 
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {MOCK_LISTINGS.map((l) => {
-          const event = getEvent(l.eventId);
-          const max = maxResalePrice(l.faceValue, l.capBps);
-          const left = l.transferLimit - l.transfersUsed;
-          return (
+      {!session ? (
+        <View style={styles.card}>
+          <Text style={styles.body}>Sign in to see listings and buy or sell tickets.</Text>
+          <Button label="Sign in" onPress={() => router.push("/login")} testID="resale-sign-in" />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {notice ? <Text style={styles.ok}>{notice}</Text> : null}
+          {loading && listings.length === 0 ? <Text style={styles.meta}>Loading…</Text> : null}
+
+          {mine.length > 0 ? <Text style={styles.section}>My listings</Text> : null}
+          {mine.map((l) => (
             <View key={l.id} style={styles.card}>
-              <Text style={styles.event}>{event?.title ?? "Event"}</Text>
+              <Text style={styles.event}>{l.eventTitle}</Text>
               <Text style={styles.meta}>
-                {event?.when} · {l.tierName}
+                {l.venue} · {formatWhen(l.startsAt)}
               </Text>
-
-              <Row label="Face value" value={inr(l.faceValue)} />
-              <Row label={`Max allowed (${l.capBps / 100}%)`} value={inr(max)} />
-              <Row label="Ask price" value={inr(l.ask)} strong />
-              <Text style={styles.meta}>
-                Transfers left: {left} of {l.transferLimit}
-              </Text>
-
-              {reserved === l.id ? (
-                <Text style={styles.ok}>
-                  Reserved in demo mode. Razorpay test payment and the ownership transfer come in Phase 2.
-                </Text>
-              ) : (
-                <Button label={`Buy for ${inr(l.ask)}`} onPress={() => buy(l)} testID={`buy-${l.id}`} />
-              )}
+              <Row label="Ask price" value={formatRupees(l.askRupees)} strong />
+              <Text style={styles.meta}>{listingLabel(l.status)}</Text>
+              <Button
+                label="Take down listing"
+                variant="secondary"
+                onPress={() => take(l)}
+                disabled={l.status !== "ACTIVE" || busyId !== null}
+                loading={busyId === l.id}
+                testID={`take-${l.id}`}
+              />
             </View>
-          );
-        })}
+          ))}
 
-        <Button label="Sell one of my tickets" variant="secondary" onPress={() => router.push("/tickets")} />
-      </ScrollView>
+          <Text style={styles.section}>For sale</Text>
+          {!loading && others.length === 0 ? <Text style={styles.meta}>No tickets listed right now.</Text> : null}
+          {others.map((l) => (
+            <View key={l.id} style={styles.card}>
+              <Text style={styles.event}>{l.eventTitle}</Text>
+              <Text style={styles.meta}>
+                {l.venue} · {formatWhen(l.startsAt)}
+              </Text>
+              <Row label="Max allowed (cap)" value={formatRupees(l.maxRupees)} />
+              <Row label="Ask price" value={formatRupees(l.askRupees)} strong />
+              <Button
+                label={`Buy for ${formatRupees(l.askRupees)}`}
+                onPress={() => buy(l)}
+                disabled={busyId !== null}
+                loading={busyId === l.id}
+                testID={`buy-${l.id}`}
+              />
+            </View>
+          ))}
+
+          <Button label="Sell one of my tickets" variant="secondary" onPress={() => router.push("/tickets")} />
+        </ScrollView>
+      )}
     </Screen>
   );
 }
@@ -80,6 +170,7 @@ const styles = StyleSheet.create({
   back: { color: colors.brand.cyan, fontSize: fontSize.md, paddingVertical: space.md },
   title: { color: colors.text.primary, fontSize: fontSize.xxl, fontWeight: fontWeight.bold },
   body: { color: colors.text.muted, fontSize: fontSize.sm, lineHeight: 20, marginTop: space.xs, marginBottom: space.md },
+  section: { color: colors.text.primary, fontSize: fontSize.lg, fontWeight: fontWeight.semibold, marginTop: space.sm },
   list: { paddingBottom: space.xxl, gap: space.md },
   card: {
     backgroundColor: colors.bg.card,
@@ -95,5 +186,6 @@ const styles = StyleSheet.create({
   rowLabel: { color: colors.text.muted, fontSize: fontSize.md },
   rowValue: { color: colors.text.primary, fontSize: fontSize.md },
   strong: { fontWeight: fontWeight.bold, color: colors.brand.cyan },
-  ok: { color: colors.status.success, fontSize: fontSize.sm, marginTop: space.xs },
+  ok: { color: colors.status.success, fontSize: fontSize.sm },
+  error: { color: colors.status.danger, fontSize: fontSize.sm },
 });

@@ -13,6 +13,7 @@ import { assertBuyerCanTransact, authenticateBuyer, type Buyer } from "../_share
 import { sendSecurityEmail } from "../_shared/email.ts";
 import { refuse, resultOf, rowOf, type Outcomes } from "../_shared/outcome.ts";
 import { claimCodeHash, INVITE_TTL_HOURS, isClaimCodeShape, newClaimCode } from "../_shared/group.ts";
+import { allocateOnChain, chainConfigFromEnv, inBackground } from "../_shared/chain_call.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -135,6 +136,8 @@ async function claim(cfg: Config, buyer: Buyer, body: Record<string, unknown>) {
   const result = resultOf(data);
   if (result !== "CLAIMED") throw refuse(result, CLAIM_OUTCOMES);
   const row = rowOf(data);
+  // Phase 3, best effort: the database moved the ticket to the member. Move the token on chain to them too.
+  inBackground(allocateOnChain(chainConfigFromEnv(), String(row.out_ticket_id), buyer.userId), "allocate");
   return { ok: true, ticket_id: row.out_ticket_id, group_ticket_id: row.out_group_id };
 }
 

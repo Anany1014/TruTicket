@@ -31,7 +31,7 @@ export type RawTicket = {
   id: string;
   status: string;
   faceValueMinor: number;
-  events: Joined<{ id: string; title: string; venue: string; startAt: string }>;
+  events: Joined<{ id: string; title: string; venue: string; startAt: string; resaleCapBps?: number }>;
   ticket_types: Joined<{ id: string; name: string }>;
 };
 
@@ -97,6 +97,7 @@ export function toAppTicket(raw: RawTicket, now = Date.now()): AppTicket | null 
     faceValue: paiseToRupees(raw.faceValueMinor),
     status: groupOf(raw.status, ev.startAt, now),
     statusRaw: raw.status,
+    capBps: typeof ev.resaleCapBps === "number" ? ev.resaleCapBps : undefined,
   };
 }
 

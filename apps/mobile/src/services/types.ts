@@ -38,6 +38,7 @@ export type AppTicket = {
   faceValue: number; // INR
   status: TicketStatusGroup;
   statusRaw: string;
+  capBps?: number; // event resale cap in basis points (11000 = 110%); undefined means the platform default
 };
 
 export type ScanStatus =

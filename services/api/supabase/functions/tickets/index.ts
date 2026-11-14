@@ -6,6 +6,11 @@ import { loadConfig } from "../_shared/env.ts";
 import { ApiError, CORS_HEADERS, errorResponse, json, readJsonObject } from "../_shared/http.ts";
 import { assertBuyerCanTransact, authenticateBuyer } from "../_shared/buyer.ts";
 import { issueQr, QR_TTL_SECONDS } from "../_shared/qr.ts";
+import { chainConfigFromEnv, inBackground, mintOnChain } from "../_shared/chain_call.ts";
+
+// Tickets whose on-chain mint may still be missing. A buyer opening "mine" retries these (Phase 3, best effort).
+const MINTABLE = new Set(["ISSUED_ACTIVE", "ISSUED_UNASSIGNED_GROUP"]);
+const MAX_LAZY_MINTS = 5;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -21,11 +26,26 @@ Deno.serve(async (req) => {
     if (body.action === "mine") {
       const { data, error } = await admin
         .from("tickets")
-        .select("id, status, faceValueMinor, events(id, title, venue, startAt), ticket_types(id, name)")
+        .select('id, status, faceValueMinor, "tokenId", events(id, title, venue, startAt, resaleCapBps), ticket_types(id, name)')
         .eq("currentOwnerId", buyer.userId)
         .order("createdAt", { ascending: false });
       if (error) throw error;
-      return json({ ok: true, tickets: data ?? [] });
+      const rows = (data ?? []) as Array<Record<string, unknown>>;
+      // Phase 3, best effort: retry any mint that never finished. Runs after the response.
+      const missing = rows
+        .filter((t) => t.tokenId === null && MINTABLE.has(String(t.status)))
+        .slice(0, MAX_LAZY_MINTS)
+        .map((t) => String(t.id));
+      if (missing.length > 0) {
+        const cfg2 = chainConfigFromEnv();
+        inBackground(
+          (async () => {
+            for (const id of missing) await mintOnChain(cfg2, id);
+          })(),
+          "lazy-mint",
+        );
+      }
+      return json({ ok: true, tickets: rows.map(({ tokenId: _t, ...rest }) => rest) });
     }
 
     if (body.action === "qr") {

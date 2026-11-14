@@ -27,7 +27,8 @@ export default function Profile() {
       <View style={styles.list}>
         <Row label="Security & devices" onPress={() => router.push("/security")} />
         <Row label="Resale marketplace" onPress={() => router.push("/resale")} />
-        <Row label="Group distribution" onPress={() => router.push({ pathname: "/group/[id]", params: { id: "grp-1" } })} />
+        <Row label="Group distribution" onPress={() => router.push("/group")} />
+        <Row label="Accept a group ticket" onPress={() => router.push("/group/claim")} />
         <Row label="Gate staff" onPress={() => router.push("/gate")} last />
       </View>
 

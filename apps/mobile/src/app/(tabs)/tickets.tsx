@@ -40,7 +40,7 @@ export default function Tickets() {
           <Text style={styles.linkText}>Resale market →</Text>
         </Pressable>
         <Pressable
-          onPress={() => router.push({ pathname: "/group/[id]", params: { id: "grp-1" } })}
+          onPress={() => router.push("/group")}
           style={styles.link}
           accessibilityRole="button"
         >

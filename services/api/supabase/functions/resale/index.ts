@@ -1,5 +1,6 @@
 // TruTicket resale Edge Function (PHASE2_PLAN §2.8, PRD §6.5). Signed-in users only.
 //   { "action": "listings" }                          -> active listings, each with its price cap
+//   { "action": "mine" }                              -> my listings (ACTIVE or PURCHASE_PENDING), with listing_id to cancel
 //   { "action": "list", "ticket_id", "ask_minor" }    -> list my ticket, at or below the cap
 //   { "action": "cancel", "listing_id" }              -> take my listing down (only while ACTIVE)
 //   { "action": "buy", "listing_id" }                 -> hold it and start a Razorpay payment
@@ -11,6 +12,7 @@ import { assertBuyerCanTransact, authenticateBuyer, type Buyer } from "../_share
 import { createRazorpayOrder } from "../_shared/razorpay.ts";
 import { refuse, resultOf, rowOf, type Outcomes } from "../_shared/outcome.ts";
 import { formatInr, maxResalePriceMinor, parseAskMinor } from "../_shared/resale.ts";
+import { cancelOnChain, chainConfigFromEnv, inBackground, listOnChain } from "../_shared/chain_call.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HOLD_SECONDS = 900; // a buyer has 15 minutes to pay
@@ -70,6 +72,31 @@ async function listings(cfg: Config) {
     }));
 }
 
+async function myListings(cfg: Config, buyer: Buyer) {
+  // The seller's own listings, so the app can show what to cancel. Only ACTIVE and PURCHASE_PENDING can change.
+  const admin = adminClient(cfg);
+  const { data, error } = await admin
+    .from("resale_listings")
+    .select("id, askMinor, status, tickets(faceValueMinor, events(title, venue, startAt, resaleCapBps))")
+    .eq("sellerId", buyer.userId)
+    .in("status", ["ACTIVE", "PURCHASE_PENDING"])
+    .order("createdAt", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  const rows = (data ?? []) as Array<Record<string, any>>;
+  return rows
+    .filter((r) => r.tickets && r.tickets.events)
+    .map((r) => ({
+      listing_id: r.id,
+      ask_minor: r.askMinor,
+      status: r.status,
+      max_minor: maxResalePriceMinor(r.tickets.faceValueMinor, r.tickets.events.resaleCapBps),
+      event_title: r.tickets.events.title,
+      venue: r.tickets.events.venue,
+      starts_at: r.tickets.events.startAt,
+    }));
+}
+
 async function listTicket(cfg: Config, buyer: Buyer, body: Record<string, unknown>) {
   const ticketId = uuidOf(body.ticket_id, "Missing ticket id.");
   const ask = parseAskMinor(body.ask_minor);
@@ -90,6 +117,8 @@ async function listTicket(cfg: Config, buyer: Buyer, body: Record<string, unknow
     throw new ApiError(422, "OVER_CAP", `The highest price allowed is ${formatInr(max)}.`, { max_minor: max });
   }
   if (result !== "OK") throw refuse(result, LIST_OUTCOMES);
+  // Phase 3, best effort: put it on chain too (mint first if needed). The database listing stands either way.
+  inBackground(listOnChain(chainConfigFromEnv(), ticketId, ask), "list");
   return { ok: true, listing_id: row.out_listing_id, max_minor: Number(row.out_max_minor) };
 }
 
@@ -97,10 +126,14 @@ async function cancelListing(cfg: Config, buyer: Buyer, body: Record<string, unk
   const listingId = uuidOf(body.listing_id, "Missing listing id.");
   await assertBuyerCanTransact(cfg, buyer.token, buyer.userId);
   const admin = adminClient(cfg);
+  const { data: lst, error: lookErr } = await admin.from("resale_listings").select('"ticketId"').eq("id", listingId).maybeSingle();
+  if (lookErr) throw lookErr;
   const { data, error } = await admin.rpc("resale_cancel", { p_seller: buyer.userId, p_listing: listingId });
   if (error) throw error;
   const result = resultOf(data);
   if (result !== "OK") throw refuse(result, CANCEL_OUTCOMES);
+  // Phase 3, best effort: take the on-chain listing down too. Nothing listed on chain counts as done.
+  if (lst) inBackground(cancelOnChain(chainConfigFromEnv(), String(lst.ticketId)), "cancel");
   return { ok: true };
 }
 
@@ -151,6 +184,7 @@ Deno.serve(async (req) => {
     const buyer = await authenticateBuyer(cfg, req);
 
     if (body.action === "listings") return json({ ok: true, listings: await listings(cfg) });
+    if (body.action === "mine") return json({ ok: true, listings: await myListings(cfg, buyer) });
     if (body.action === "list") return json(await listTicket(cfg, buyer, body));
     if (body.action === "cancel") return json(await cancelListing(cfg, buyer, body));
     if (body.action === "buy") return json(await buyListing(cfg, buyer, body));
