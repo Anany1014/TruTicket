@@ -78,7 +78,7 @@ export default function TicketScreen() {
         : null;
 
   return (
-    <Screen edges={["bottom"]}>
+    <Screen edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <Text style={styles.back} onPress={() => router.back()} accessibilityRole="button">
         ← Back

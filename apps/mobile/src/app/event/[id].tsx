@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { EventArt } from "../../components/EventArt";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
@@ -25,17 +25,12 @@ export default function EventDetail() {
     <Screen edges={["bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={[event.tint[0], event.tint[1], colors.bg.base]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
+        <EventArt event={event} style={styles.hero} fade>
           <Text style={styles.back} onPress={() => router.back()} accessibilityRole="button">
             ← Back
           </Text>
           <Text style={styles.tag}>{event.category.toUpperCase()}</Text>
-        </LinearGradient>
+        </EventArt>
 
         <Text style={styles.title}>{event.title}</Text>
         <Text style={styles.meta}>{event.when}</Text>
@@ -75,7 +70,7 @@ export default function EventDetail() {
 const styles = StyleSheet.create({
   body: { paddingBottom: space.xxl, gap: space.sm },
   hero: {
-    height: 220,
+    height: 260,
     borderRadius: radius.xl,
     padding: space.md,
     justifyContent: "space-between",

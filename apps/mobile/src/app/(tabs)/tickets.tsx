@@ -16,9 +16,7 @@ const STATUS_FOR_TAB: Record<TabName, TicketStatusGroup> = {
   Listed: "listed",
 };
 
-/**
- * My Tickets. Data from the `tickets` function. Re-reads on focus.
- */
+/** My Tickets. Data from the `tickets` function. Re-reads on focus. Layout follows the reference screens. */
 export default function Tickets() {
   const [tab, setTab] = useState<TabName>("Upcoming");
   const { tickets, error, loading, reload } = useMyTickets();
@@ -29,37 +27,36 @@ export default function Tickets() {
     }, [reload]),
   );
 
-  const list = (tickets ?? []).filter((t) => t.status === STATUS_FOR_TAB[tab]);
+  const all = tickets ?? [];
+  const list = all.filter((t) => t.status === STATUS_FOR_TAB[tab]);
 
   return (
     <Screen edges={["top"]}>
-      <Text style={styles.title}>My Tickets</Text>
-
-      <View style={styles.links}>
-        <Pressable onPress={() => router.push("/resale")} style={styles.link} accessibilityRole="button">
-          <Text style={styles.linkText}>Resale market →</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push("/group")}
-          style={styles.link}
-          accessibilityRole="button"
-        >
-          <Text style={styles.linkText}>Group tickets →</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>My Tickets</Text>
+        <Pressable onPress={() => router.push("/group")} style={styles.groupPill} accessibilityRole="button">
+          <Text style={styles.groupText}>👥 Group</Text>
         </Pressable>
       </View>
 
       <View style={styles.tabs}>
-        {TABS.map((t) => (
-          <Pressable
-            key={t}
-            onPress={() => setTab(t)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: t === tab }}
-            style={[styles.tab, t === tab && styles.tabActive]}
-          >
-            <Text style={[styles.tabText, t === tab && styles.tabTextActive]}>{t}</Text>
-          </Pressable>
-        ))}
+        {TABS.map((t) => {
+          const count = all.filter((x) => x.status === STATUS_FOR_TAB[t]).length;
+          const on = t === tab;
+          return (
+            <Pressable
+              key={t}
+              onPress={() => setTab(t)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              style={[styles.tab, on && styles.tabActive]}
+            >
+              <Text style={[styles.tabText, on && styles.tabTextActive]}>
+                {t} ({count})
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -73,20 +70,40 @@ export default function Tickets() {
           <Text style={styles.empty}>No {tab.toLowerCase()} tickets.</Text>
         ) : (
           list.map((t) => {
+            const statusLabel = t.status === "listed" ? "Listed" : t.status === "past" ? "Past" : "Upcoming";
             return (
-              <Pressable
-                key={t.id}
-                onPress={() => router.push({ pathname: "/ticket/[id]", params: { id: t.id } })}
-                style={[styles.card, { borderLeftColor: t.tierColor }]}
-                accessibilityRole="button"
-              >
+              <View key={t.id} style={styles.card}>
+                <View style={styles.cardTop}>
+                  <Text style={styles.code}>TT-{t.id.slice(0, 4).toUpperCase()}</Text>
+                  <Text
+                    style={[
+                      styles.badge,
+                      statusLabel === "Upcoming" && styles.badgeGreen,
+                      statusLabel === "Listed" && styles.badgePurple,
+                      statusLabel === "Past" && styles.badgeMuted,
+                    ]}
+                  >
+                    {statusLabel}
+                  </Text>
+                </View>
+
                 <Text style={styles.event}>{t.eventTitle}</Text>
                 <Text style={styles.meta}>{formatWhen(t.startAt)}</Text>
-                <Text style={styles.meta}>
-                  1 × {t.tierName} · ₹{t.faceValue.toLocaleString("en-IN")}
-                </Text>
-                <Text style={styles.open}>{t.status === "listed" ? "View listing" : "Show QR"} →</Text>
-              </Pressable>
+
+                <View style={styles.cardBottom}>
+                  <View>
+                    <Text style={styles.tier}>{t.tierName.toUpperCase()}</Text>
+                    <Text style={styles.price}>₹{t.faceValue.toLocaleString("en-IN")}</Text>
+                  </View>
+                  <Pressable
+                    onPress={() => router.push({ pathname: "/ticket/[id]", params: { id: t.id } })}
+                    style={styles.qrBtn}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.qrText}>{t.status === "listed" ? "View listing" : "Show QR"}</Text>
+                  </Pressable>
+                </View>
+              </View>
             );
           })
         )}
@@ -96,33 +113,75 @@ export default function Tickets() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.text.primary, fontSize: fontSize.xxl, fontWeight: fontWeight.bold, marginTop: space.md },
-  links: { flexDirection: "row", gap: space.md, marginTop: space.sm },
-  link: { paddingVertical: space.xxs },
-  linkText: { color: colors.brand.cyan, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
-  tabs: { flexDirection: "row", gap: space.sm, marginTop: space.md },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: space.md,
+  },
+  title: { color: colors.text.primary, fontSize: fontSize.xxl, fontWeight: fontWeight.bold },
+  groupPill: {
+    borderWidth: 1,
+    borderColor: colors.bg.border,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
+    paddingVertical: space.xs,
+    backgroundColor: colors.bg.card,
+  },
+  groupText: { color: colors.brand.ctaCyan, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
+  tabs: { flexDirection: "row", gap: space.sm, marginTop: space.md, flexWrap: "wrap" },
   tab: {
     paddingHorizontal: space.md,
     paddingVertical: space.xs,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.bg.border,
+    backgroundColor: colors.bg.card,
   },
   tabActive: { backgroundColor: colors.brand.ctaCyan, borderColor: colors.brand.ctaCyan },
   tabText: { color: colors.text.secondary, fontSize: fontSize.sm },
-  tabTextActive: { color: "#041014", fontWeight: fontWeight.semibold },
+  tabTextActive: { color: "#0A0A0C", fontWeight: fontWeight.semibold },
   list: { paddingTop: space.md, paddingBottom: space.xxl, gap: space.md },
   card: {
     backgroundColor: colors.bg.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.bg.border,
-    borderLeftWidth: 4,
     padding: space.md,
-    gap: space.xxs,
+    gap: space.xs,
   },
-  event: { color: colors.text.primary, fontSize: fontSize.lg, fontWeight: fontWeight.semibold },
+  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  code: { color: colors.brand.ctaCyan, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, letterSpacing: 1 },
+  badge: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    paddingHorizontal: space.sm,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    overflow: "hidden",
+  },
+  badgeGreen: { color: "#86EFAC", backgroundColor: "rgba(34,197,94,0.15)" },
+  badgePurple: { color: "#C4B5FD", backgroundColor: "rgba(139,92,246,0.18)" },
+  badgeMuted: { color: colors.text.muted, backgroundColor: colors.bg.raised },
+  event: { color: colors.text.primary, fontSize: fontSize.lg, fontWeight: fontWeight.bold, marginTop: space.xs },
   meta: { color: colors.text.muted, fontSize: fontSize.sm },
-  open: { color: colors.brand.cyan, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, marginTop: space.xs },
+  cardBottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginTop: space.sm,
+  },
+  tier: { color: colors.brand.purple, fontSize: fontSize.xs, fontWeight: fontWeight.semibold, letterSpacing: 1 },
+  price: { color: colors.text.primary, fontSize: fontSize.lg, fontWeight: fontWeight.bold },
+  qrBtn: {
+    borderWidth: 1,
+    borderColor: colors.bg.border,
+    backgroundColor: colors.bg.raised,
+    borderRadius: radius.lg,
+    paddingHorizontal: space.md,
+    height: 40,
+    justifyContent: "center",
+  },
+  qrText: { color: colors.brand.ctaCyan, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   empty: { color: colors.text.muted, fontSize: fontSize.md, textAlign: "center", marginTop: space.xl },
 });
