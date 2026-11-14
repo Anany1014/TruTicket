@@ -2,6 +2,7 @@ import { Sidebar, type NavItem } from "@/components/Sidebar";
 import type { Metadata } from "next";
 import { MockBadge } from "@/components/MockBadge";
 import { AccountChip } from "@/components/AccountChip";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = { title: "TruTicket · Admin" };
 
@@ -28,6 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
             <MockBadge label="Admin portal is mock" />
             <AccountChip />
+            <ThemeToggle label={false} />
             <span className="bell" aria-label="Notifications">●</span>
           </div>
         </header>

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+
+/** Real artwork for the demo events; the backend has no image field yet. */
+const POSTERS = ["/events/diljit-ahmedabad.jpg", "/events/home-festival-goa.jpg", "/events/doomsday.jpg"];
 import { ProgressBar } from "@/components/ui";
 import { MockBadge, LiveBadge, DataErrorNote, LoadingRows } from "@/components/MockBadge";
 import { usePublishedEvents, totalsFrom } from "@/lib/use-published-events";
@@ -53,7 +56,7 @@ export function LiveEventList() {
       {events && events.length > 0 ? (
         <>
           <div className="grid-3">
-            {events.map((e) => {
+            {events.map((e, i) => {
               const cap = e.ticketTypes.reduce((s, t) => s + t.quantity, 0);
               const sold = e.ticketTypes.reduce((s, t) => s + (t.quantity - t.seatsLeft), 0);
               const revenue = e.ticketTypes.reduce(
@@ -62,9 +65,12 @@ export function LiveEventList() {
               );
               return (
                 <Link key={e.id} href={`/organiser/events/${e.id}`} className="event-tile">
-                  <div
-                    className="event-art"
-                    style={{ background: "linear-gradient(135deg, #0ACBDB, #8B7CF6 60%, #0b0b0b)" }}
+                  <img
+                    className="event-art event-art-img"
+                    src={POSTERS[i % POSTERS.length]}
+                    alt={`${e.title} banner`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="event-tile-body">
                     <b>{e.title}</b>

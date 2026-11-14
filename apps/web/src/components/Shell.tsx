@@ -1,6 +1,7 @@
 import { Sidebar, type NavItem } from "@/components/Sidebar";
 import { AccountChip } from "@/components/AccountChip";
 import { MockBadge } from "@/components/MockBadge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
  * The shared page frame: side navigation, top bar, content column.
@@ -40,6 +41,7 @@ export function Shell({
           <div className="search">{search}</div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
             {badge === undefined ? <MockBadge label="Some panels are mock" /> : badge}
+            <ThemeToggle label={false} />
             <span className="bell" aria-label="Notifications">
               ●
             </span>

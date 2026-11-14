@@ -31,6 +31,8 @@ export type EventRecord = {
   when: string;
   status: EventStatus;
   tint: [string, string];
+  /** Optional real poster in /public/events. Falls back to the tint gradient. */
+  art?: string;
   tiers: Tier[];
 };
 
@@ -127,6 +129,7 @@ export const EVENTS: EventRecord[] = [
     when: "Aug 24–26, 2025 · 4:00 PM",
     status: "Published",
     tint: ["#0ACBDB", "#8B7CF6"],
+    art: "/events/diljit-ahmedabad.jpg",
     tiers: SUNSET_TIERS,
   },
   {
@@ -137,6 +140,7 @@ export const EVENTS: EventRecord[] = [
     when: "Sep 13, 2025 · 10:00 AM",
     status: "Published",
     tint: ["#F5A524", "#0ACBDB"],
+    art: "/events/home-festival-goa.jpg",
     tiers: TECH_TIERS,
   },
   {
@@ -147,6 +151,7 @@ export const EVENTS: EventRecord[] = [
     when: "Oct 12–13, 2025 · 11:00 AM",
     status: "Paused",
     tint: ["#8B7CF6", "#F5A524"],
+    art: "/events/doomsday.jpg",
     tiers: FOOD_TIERS,
   },
 ];

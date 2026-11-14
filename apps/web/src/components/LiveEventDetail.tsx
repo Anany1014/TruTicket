@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+
+/** Artwork for the demo events; the backend has no image field yet. */
+const POSTER = "/events/diljit-ahmedabad.jpg";
 import { useEffect, useState } from "react";
 import { Badge, Kpi, PageHeader } from "@/components/ui";
 import { EventTabs } from "@/components/EventTabs";
@@ -143,7 +146,10 @@ export function LiveEventDetail({
           }
         />
 
-        <div className="hero" style={{ background: `linear-gradient(120deg, ${tint[0]}, ${tint[1]} 55%, #0b0b0b)` }} />
+        <div className="hero hero-art">
+          <img src={POSTER} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          <div className="hero-scrim" style={{ background: `linear-gradient(115deg, ${tint[0]}55, ${tint[1]}33 45%, var(--bg-base) 92%)` }} />
+        </div>
 
         <div className="grid-kpi">
           <Kpi label="Tickets sold" value={`${num(sold)} / ${num(cap)}`} hint={`${pct(cap > 0 ? (sold / cap) * 100 : 0, 1)} sold`} tone="info" />
@@ -212,7 +218,10 @@ export function LiveEventDetail({
         />
       ) : null}
 
-      <div className="hero" style={{ background: `linear-gradient(120deg, ${mock.tint[0]}, ${mock.tint[1]} 55%, #0b0b0b)` }} />
+      <div className="hero hero-art">
+        <img src={POSTER} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+        <div className="hero-scrim" style={{ background: `linear-gradient(115deg, ${mock.tint[0]}55, ${mock.tint[1]}33 45%, var(--bg-base) 92%)` }} />
+      </div>
 
       <div className="grid-kpi">
         <Kpi label="Tickets sold" value={`${num(sold)} / ${num(cap)}`} hint={`${pct((sold / cap) * 100, 1)} sold`} tone="info" />
