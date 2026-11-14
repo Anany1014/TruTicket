@@ -1,4 +1,5 @@
 import { Badge, Card, Kpi, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { EVENTS, PAYOUTS, PAYOUT_TOTALS, eventRefunds, eventRevenue } from "@/lib/organiser-data";
 import { inr } from "@/lib/format";
 
@@ -26,6 +27,7 @@ export default function Payouts() {
         subtitle="Money from ticket sales, after fees and refunds."
         actions={
           <>
+            <MockBadge />
             <button className="btn" disabled>
               Download statement
             </button>
@@ -43,7 +45,7 @@ export default function Payouts() {
         <Kpi label="Platform fees" value={inr(PAYOUT_TOTALS.platformFees)} />
       </div>
 
-      <Card title="Transaction history">
+      <Card title="Transaction history" action={<MockBadge />}>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -78,7 +80,7 @@ export default function Payouts() {
         </div>
       </Card>
 
-      <Card title="Event-wise earnings">
+      <Card title="Event-wise earnings" action={<MockBadge />}>
         <div className="table-wrap">
           <table className="table">
             <thead>

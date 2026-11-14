@@ -1,6 +1,7 @@
 import { Sidebar, type NavItem } from "@/components/Sidebar";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
+import { AccountChip } from "@/components/AccountChip";
 
 export const metadata: Metadata = { title: "TruTicket · Admin" };
 
@@ -25,9 +26,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="topbar">
           <div className="search">Search users, events, sessions…</div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
-            <Badge tone="danger">Admin · 2FA required</Badge>
+            <MockBadge label="Admin portal is mock" />
+            <AccountChip />
             <span className="bell" aria-label="Notifications">●</span>
-            <div className="avatar" aria-label="Account">A</div>
           </div>
         </header>
         <div className="content">{children}</div>

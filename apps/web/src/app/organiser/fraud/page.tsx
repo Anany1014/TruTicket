@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { FRAUD_SESSIONS } from "@/lib/organiser-data";
 import { num } from "@/lib/format";
 
@@ -8,6 +9,8 @@ const STATUS_TONE = { New: "info", "In review": "warning", Reviewed: "neutral" }
 /**
  * Fraud monitoring (PRD screen 20 and the fraud dashboard). Scores come from the ML risk service,
  * which is built by the ML team. Here they are mock values with the same fields.
+ *
+ * There is no backend endpoint for organiser fraud sessions yet, so this screen is mock.
  */
 export default function Fraud() {
   const count = (band: "LOW" | "MEDIUM" | "HIGH") => FRAUD_SESSIONS.filter((s) => s.band === band).length;
@@ -19,7 +22,11 @@ export default function Fraud() {
 
   return (
     <>
-      <PageHeader title="Fraud monitoring" subtitle="Suspicious sessions for your events. Organisers can review, but cannot change a risk score." />
+      <PageHeader
+        title="Fraud monitoring"
+        subtitle="Suspicious sessions for your events. Organisers can review, but cannot change a risk score."
+        actions={<MockBadge />}
+      />
 
       <div className="grid-3">
         {tiles.map((t) => (
@@ -35,7 +42,7 @@ export default function Fraud() {
         ))}
       </div>
 
-      <Card title="Suspicious sessions">
+      <Card title="Suspicious sessions" action={<MockBadge />}>
         <div className="row small muted">
           Flagged sessions on your events: {FRAUD_SESSIONS.length}. High-band: {count("HIGH")}.
         </div>

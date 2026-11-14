@@ -1,11 +1,21 @@
 import Link from "next/link";
 import { Badge, Card, Kpi, PageHeader, ProgressBar } from "@/components/ui";
+import { MockBadge, LiveBadge } from "@/components/MockBadge";
+import { LiveInventory } from "@/components/LiveInventory";
 import { EVENTS, available, tierRevenue } from "@/lib/organiser-data";
 import { inr, num, pct } from "@/lib/format";
 
-/** Ticket types and inventory (PRD screen 18). Counts follow the PRD state list. */
+/**
+ * Ticket types and inventory (PRD screen 18).
+ *
+ * Two blocks on this screen:
+ * - the live table, read from `events` "list". It shows the real ticket types
+ *   with their face value, quantity, seats left, per-account limit and sale window.
+ * - the mock table, which carries the counts the backend does not expose:
+ *   reserved, sold, listed, cancelled, redeemed and group-unassigned.
+ */
 export default function Inventory() {
-  // Show the Sunset event by default. The event picker is wired to the API in Phase 2.
+  // The mock reference event. The live block above it reads from the backend.
   const e = EVENTS[0];
   const tiers = e.tiers;
   const qty = tiers.reduce((s, t) => s + t.qty, 0);
@@ -16,18 +26,20 @@ export default function Inventory() {
     <>
       <PageHeader
         title="Ticket inventory"
-        subtitle={`${e.title} · ${e.venue}`}
+        subtitle="Live ticket types from the backend, plus the counts only the organiser endpoint will give."
         actions={
           <>
-            <span className="btn" style={{ cursor: "default" }}>
-              {e.title}
-            </span>
+            <LiveBadge label="Live table below" />
             <Link href="/organiser/create" className="btn btn-primary">
               + Add ticket type
             </Link>
           </>
         }
       />
+
+      <LiveInventory />
+
+      <div className="section-title">Inventory by state — mock reference event</div>
 
       <div className="grid-kpi">
         <Kpi label="Ticket types" value={num(tiers.length)} />
@@ -36,7 +48,7 @@ export default function Inventory() {
         <Kpi label="Available" value={num(avail)} tone="info" hint={`${pct((avail / qty) * 100, 1)} left`} />
       </div>
 
-      <Card title="Ticket types">
+      <Card title={`Ticket types — ${e.title} · ${e.venue}`} action={<MockBadge />}>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -83,7 +95,7 @@ export default function Inventory() {
         </div>
       </Card>
 
-      <Card title="Inventory by state (PRD 17.2)">
+      <Card title="Inventory by state (PRD 17.2)" action={<MockBadge />}>
         <div className="table-wrap">
           <table className="table">
             <thead>

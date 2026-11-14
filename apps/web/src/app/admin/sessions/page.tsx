@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { SESSIONS } from "@/lib/admin-data";
 
 const BAND = { LOW: "success", MEDIUM: "warning", HIGH: "danger" } as const;
@@ -11,7 +12,10 @@ export default function Sessions() {
   const s = SESSIONS[0];
   return (
     <>
-      <PageHeader title="Session investigation" subtitle="Why a session was flagged, and what the platform did about it." />
+      <PageHeader title="Session investigation"
+        subtitle="Why a session was flagged, and what the platform did about it."
+        actions={<MockBadge />}
+      />
       <Card title="Flagged sessions">
         <div className="table-wrap">
           <table className="table">

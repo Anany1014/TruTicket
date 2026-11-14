@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { Badge, Card } from "./ui";
+import { MockBadge } from "./MockBadge";
+import { callFunction, ApiError } from "@/lib/api";
+import { getAccessToken } from "@/lib/session";
+import type { EventsCreateResponse } from "@/lib/api-types";
 import { inr } from "@/lib/format";
 
 const STEPS = ["Event information", "Venue & schedule", "Ticket types", "Resale policy", "Review & publish"];
@@ -54,6 +58,8 @@ export function CreateEventWizard() {
     { name: "General Admission", face: 2499, qty: 10000, limit: 6, groupAllowed: false },
   ]);
   const [message, setMessage] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState<{ event_id: string; status: string } | null>(null);
 
   const set =
     <K extends keyof Form>(key: K) =>
@@ -97,11 +103,63 @@ export function CreateEventWizard() {
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
-  function publish() {
-    setMessage({
-      text: "Submitted for review (demo). Real publishing, the on-chain policy, and admin approval come in Phase 2.",
-      tone: "ok",
-    });
+  /**
+   * Submits the event to the backend.
+   *
+   * `events` "create" needs a signed-in, verified organiser, so it needs an access
+   * token. When nobody is signed in this stops with a link to the sign-in page
+   * instead of firing a call that can only fail. The call itself is the real one,
+   * and the server's own error is shown as-is.
+   */
+  async function publish() {
+    const token = getAccessToken();
+    if (!token) {
+      setMessage({
+        text: "Sign in first. Creating an event belongs to an organiser account, so it needs you signed in.",
+        tone: "err",
+      });
+      return;
+    }
+
+    if (!form.start.trim()) {
+      setMessage({ text: "Add a start date and time before submitting.", tone: "err" });
+      return;
+    }
+    // The endpoint needs a start and an end after it.
+    const startsAt = new Date(form.start);
+    const endsAt = form.end.trim() ? new Date(form.end) : new Date(startsAt.getTime() + 4 * 60 * 60 * 1000);
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime())) {
+      setMessage({ text: "The start and end dates are not valid dates.", tone: "err" });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await callFunction<EventsCreateResponse>(
+        "events",
+        {
+          action: "create",
+          title: form.title.trim(),
+          venue: `${form.venue.trim()}${form.city.trim() ? `, ${form.city.trim()}` : ""}`,
+          starts_at: startsAt.toISOString(),
+          ends_at: endsAt.toISOString(),
+          description: form.description.trim() ? form.description.trim() : undefined,
+          categories: [form.category],
+        },
+        { token },
+      );
+      setCreated({ event_id: res.event_id, status: res.status });
+      setMessage({
+        text: `Draft created. The event id is ${res.event_id}. It stays a draft until a TruTicket admin approves it.`,
+        tone: "ok",
+      });
+    } catch (e: unknown) {
+      const err = e instanceof ApiError ? e : new ApiError("UNKNOWN", "Something went wrong. Please try again.");
+      setMessage({ text: `${err.message} (${err.code})`, tone: "err" });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -236,7 +294,7 @@ export function CreateEventWizard() {
       ) : null}
 
       {step === 4 ? (
-        <Card title="Review & publish">
+        <Card title="Review & publish" action={<MockBadge label="Ticket types not sent" />}>
           <div className="kv"><span>Title</span><span>{form.title || "—"}</span></div>
           <div className="kv"><span>Category</span><span>{form.category}</span></div>
           <div className="kv"><span>Venue</span><span>{form.venue || "—"}, {form.city}</span></div>
@@ -248,6 +306,17 @@ export function CreateEventWizard() {
           <div className="row" style={{ marginTop: 8 }}>
             <Badge tone="warning">Draft until approved</Badge>
           </div>
+          <div className="notice warn" style={{ marginTop: 12 }}>
+            Submitting creates the event on the backend through <code>events</code> <code>create</code>. It needs a
+            signed-in, verified organiser. Ticket types, resale cap, transfer limit and platform fee have no endpoint
+            yet, so they stay on this screen only and are not sent.
+          </div>
+          {created ? (
+            <div className="notice" style={{ marginTop: 12 }}>
+              Created. Event id <code>{created.event_id}</code>, status <code>{created.status}</code>.{" "}
+              <a href={`/organiser/events/${created.event_id}`}>Open the event detail</a>.
+            </div>
+          ) : null}
         </Card>
       ) : null}
 
@@ -256,7 +325,7 @@ export function CreateEventWizard() {
           ← Back
         </button>
         <div className="row">
-          <button className="btn" onClick={() => setMessage({ text: "Draft saved (demo). Drafts sync to the server in Phase 2.", tone: "ok" })}>
+          <button className="btn" onClick={() => setMessage({ text: "Draft saved (mock only). Nothing was sent to the server.", tone: "ok" })}>
             Save draft
           </button>
           {step < STEPS.length - 1 ? (
@@ -264,8 +333,8 @@ export function CreateEventWizard() {
               Continue →
             </button>
           ) : (
-            <button className="btn btn-primary" onClick={publish}>
-              Submit for review
+            <button className="btn btn-primary" onClick={publish} disabled={submitting}>
+              {submitting ? "Submitting…" : "Submit for review"}
             </button>
           )}
         </div>

@@ -1,11 +1,15 @@
 import { Badge, Card, Kpi, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { ADMIN_KPIS, AUDIT, EVENT_QUEUE } from "@/lib/admin-data";
 
 /** Platform overview (reference screen 27). */
 export default function AdminOverview() {
   return (
     <>
-      <PageHeader title="Platform overview" subtitle="Health of ticket sales, resale, gate, and risk across TruTicket." />
+      <PageHeader title="Platform overview"
+        subtitle="Health of ticket sales, resale, gate, and risk across TruTicket."
+        actions={<MockBadge />}
+      />
       <div className="grid-kpi">
         {ADMIN_KPIS.map((k) => (
           <Kpi key={k.label} label={k.label} value={k.value} hint={k.hint} tone={k.tone} />

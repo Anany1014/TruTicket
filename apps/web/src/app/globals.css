@@ -118,6 +118,16 @@ select.input { appearance: auto; }
 .badge-purple { color: var(--purple); }
 .badge-neutral { color: var(--muted); border-color: var(--border); }
 
+/* Mock / live data tags */
+.mock-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.mock-badge.mock { color: var(--amber); background: rgba(245, 165, 36, 0.1); border: 1px solid rgba(245, 165, 36, 0.35); }
+.mock-badge.live { color: var(--success); background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.35); }
+.mock-badge .dotmark { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.data-state { display: flex; flex-direction: column; gap: 10px; padding: 22px; border-radius: var(--radius); border: 1px dashed var(--border); background: var(--bg-card); align-items: flex-start; }
+.data-state .state-title { font-weight: 600; font-size: 14px; }
+.skeleton-row { height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-raised), var(--border), var(--bg-raised)); background-size: 200% 100%; animation: skeleton 1.2s ease-in-out infinite; }
+@keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 /* Table */
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -208,3 +218,106 @@ select.input { appearance: auto; }
 
 /* Hide secondary labels on small screens (e.g. wizard step names). */
 @media (max-width: 860px) { .hide-sm { display: none; } }
+
+/* ---------- Sign-in and the account control ---------- */
+
+/* Standalone sign-in: centred, no sidebar, because a signed-out visitor has no nav. */
+.signin-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background:
+    radial-gradient(900px 420px at 50% -10%, rgba(10, 203, 219, 0.10), transparent 70%),
+    var(--bg, #0a0a0a);
+}
+.signin-inner { width: 100%; max-width: 430px; }
+.signin-brand { display: flex; justify-content: center; margin-bottom: 22px; }
+.signin-title { font-size: 22px; font-weight: 700; margin: 0; }
+.signin-foot { text-align: center; margin-top: 18px; }
+.signin-link { color: var(--cyan, #0ACBDB); text-decoration: underline; }
+
+/* The code field reads as six separate digits. */
+.code-input {
+  text-align: center;
+  letter-spacing: 0.55em;
+  font-size: 22px;
+  font-weight: 600;
+  padding-left: 0.55em;
+}
+
+.btn-block { width: 100%; display: block; }
+.signin-card { margin-top: 4px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+
+/* The signed-in email in the top bar: readable, but it must not push the bar wide. */
+.account-email {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-email.on-light { color: #0b0b0b; }
+
+/* ---------- Buyer screens: entry code and inline actions ---------- */
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* An action that opens under a row, e.g. the "sell" amount box. */
+.inline-panel {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  min-width: 260px;
+}
+
+/* The rotating entry token. Wide tracking so it can be read out or scanned. */
+.qr-token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: break-all;
+  padding: 14px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  color: var(--cyan);
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 780px) {
+  /* Collapse the sidebar into a horizontal strip so content keeps its width.
+     `grid-template-rows` matters: with only `min-height: 100vh` the browser spreads
+     the spare height across both rows and the strip grows to a third of the screen. */
+  .shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .sidebar {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .sidebar .nav { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex: 1 1 auto; }
+  .sidebar .nav-item { white-space: nowrap; }
+  .sidebar > .logo { flex: 0 0 auto; }
+  .sidebar-foot { display: none; }
+  .content { padding: 16px 14px 40px; }
+  .topbar { padding: 10px 14px; gap: 10px; flex-wrap: wrap; }
+  .topbar .search { display: none; }
+  .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Very small screens: the wordmark is the first thing to go, so the menu fits. */
+@media (max-width: 520px) {
+  .sidebar .logo-word { display: none; }
+}
