@@ -2,6 +2,7 @@ import { Sidebar, type NavItem } from "@/components/Sidebar";
 import { MockBadge } from "@/components/MockBadge";
 import { LiveEventDetailLink } from "@/components/LiveEventDetailLink";
 import { AccountChip } from "@/components/AccountChip";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /** The 10 organiser screens (PLAN §4). */
 const NAV: NavItem[] = [
@@ -41,6 +42,7 @@ export default function OrganiserLayout({ children }: { children: React.ReactNod
           <div className="search">Search events, tickets, orders…</div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
             <MockBadge label="Some panels are mock" />
+            <ThemeToggle label={false} />
             <span className="bell" aria-label="Notifications">●</span>
             <AccountChip />
           </div>

@@ -124,7 +124,7 @@ export default function StatusPage() {
   }, []);
 
   return (
-    <>
+    <div className="standalone">
       <PageHeader
         title="Connection status"
         subtitle="What the browser can and cannot reach. Use this when a screen says it could not load live data."
@@ -210,6 +210,6 @@ export default function StatusPage() {
           </li>
         </ol>
       </Card>
-    </>
+    </div>
   );
 }

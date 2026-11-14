@@ -61,7 +61,20 @@ export default function OrganiserOverview() {
           const cap = eventCapacity(e);
           return (
             <Link key={e.id} href={`/organiser/events/${e.id}`} className="event-tile">
-              <div className="event-art" style={{ background: `linear-gradient(135deg, ${e.tint[0]}, ${e.tint[1]} 60%, #0b0b0b)` }} />
+              {e.art ? (
+                <img
+                  className="event-art event-art-img"
+                  src={e.art}
+                  alt={`${e.title} poster`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div
+                  className="event-art"
+                  style={{ background: `linear-gradient(135deg, ${e.tint[0]}, ${e.tint[1]} 60%, #0b0b0b)` }}
+                />
+              )}
               <div className="event-tile-body">
                 <b>{e.title}</b>
                 <span className="muted small">{e.venue}</span>

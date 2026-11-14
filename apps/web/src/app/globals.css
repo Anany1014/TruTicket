@@ -1,22 +1,40 @@
 /* TruTicket web tokens. Same values as packages/ui-tokens/tokens.json (mobile uses the same file). */
 :root {
-  --bg-base: #0b0b0b;
-  --bg-surface: #0a1423;
-  --bg-card: #111827;
-  --bg-raised: #1a2332;
-  --border: #243044;
+  /* Palette matched to the mobile app: neon lime primary, violet secondary, near-black. */
+  --lime: #c9f73c;
+  --lime-dim: #a9d92a;
+  --violet: #a78bfa;
+
+  --bg-base: #080808;
+  --bg-surface: #0d0d0d;
+  --bg-card: #141414;
+  --bg-raised: #1d1d1d;
+  --border: #262626;
+  --border-strong: #363636;
+
   --text: #ffffff;
-  --text-2: #d1d5db;
-  --muted: #9ca3af;
-  --disabled: #4b5563;
-  --cyan: #0acbdb;
-  --cta: #1fcbcd;
-  --purple: #8b7cf6;
+  --text-2: #e8e8e8;
+  --muted: #9a9a9a;
+  --disabled: #4b4b4b;
+
+  /* The old names stay, aliased to the new brand, so every component keeps working. */
+  --cyan: var(--lime);
+  --cta: var(--lime);
+  --purple: var(--violet);
   --amber: #f5a524;
   --success: #22c55e;
   --danger: #ef4444;
   --info: #38bdf8;
-  --radius: 14px;
+
+  --card-a: #161616;
+  --card-b: #121212;
+  --bar-a: #0f0f0f;
+  --bar-b: #0b0b0b;
+  --shadow-card: rgba(0, 0, 0, 0.9);
+  --topbar-bg: rgba(13, 13, 13, 0.82);
+
+  --radius: 18px;
+  --radius-lg: 24px;
   color-scheme: dark;
 }
 
@@ -62,7 +80,7 @@ img { display: block; max-width: 100%; }
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .card-title { font-size: 15px; font-weight: 600; }
-.grid-kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.grid-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .grid-main { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
@@ -197,7 +215,7 @@ select.input { appearance: auto; }
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .grid-kpi { grid-template-columns: repeat(2, 1fr); }
+  .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-3 { grid-template-columns: 1fr 1fr; }
   .grid-main { grid-template-columns: 1fr; }
 }
@@ -307,7 +325,10 @@ select.input { appearance: auto; }
     border-bottom: 1px solid var(--border);
     padding: 10px 16px;
   }
-  .sidebar .nav { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex: 1 1 auto; }
+  /* The strip scrolls inside itself. Without `min-width: 0` and clipping on the
+     parent, the row pushes the whole document sideways. */
+  .sidebar { overflow: hidden; }
+  .sidebar .nav { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; flex: 1 1 auto; min-width: 0; }
   .sidebar .nav-item { white-space: nowrap; }
   .sidebar > .logo { flex: 0 0 auto; }
   .sidebar-foot { display: none; }
@@ -320,4 +341,308 @@ select.input { appearance: auto; }
 /* Very small screens: the wordmark is the first thing to go, so the menu fits. */
 @media (max-width: 520px) {
   .sidebar .logo-word { display: none; }
+}
+
+/* A page that sits outside the sidebar shell (connection status) still needs a
+   readable measure and padding, or the rows stretch to the window edge. */
+.standalone { max-width: 920px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; gap: 20px; }
+@media (max-width: 780px) { .standalone { padding: 20px 14px 48px; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Design polish — aligned to the mobile app (neon lime on near-black).
+   These come last on purpose: they override the older rules above without
+   touching a single component.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body {
+  background:
+    radial-gradient(1200px 600px at 12% -12%, rgba(201, 247, 60, 0.07), transparent 62%),
+    radial-gradient(900px 520px at 92% 4%, rgba(167, 139, 250, 0.07), transparent 62%),
+    var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(201, 247, 60, 0.28); color: #fff; }
+
+/* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: #2e2e2e transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 999px; border: 2px solid var(--bg-base); }
+::-webkit-scrollbar-thumb:hover { background: #3d3d3d; }
+
+/* ---------- Shell ---------- */
+.sidebar {
+  background: linear-gradient(180deg, var(--bar-a) 0%, var(--bar-b) 100%);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.topbar { background: var(--topbar-bg); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.search { border-radius: 999px; background: var(--bg-raised); }
+
+.nav-item {
+  border-radius: 999px;
+  padding: 9px 14px;
+  color: var(--muted);
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+.nav-item:hover { background: var(--bg-raised); color: var(--text-2); transform: translateX(2px); }
+.nav-item.active {
+  background: rgba(201, 247, 60, 0.13);
+  color: var(--lime);
+  font-weight: 650;
+  box-shadow: inset 0 0 0 1px rgba(201, 247, 60, 0.28);
+}
+
+.avatar { border-color: rgba(201, 247, 60, 0.55); color: var(--lime); background: rgba(201, 247, 60, 0.1); }
+
+/* ---------- Page header ---------- */
+.page-title { font-size: 30px; font-weight: 800; letter-spacing: -0.6px; }
+.page-sub { color: var(--muted); font-size: 14.5px; margin-top: 6px; max-width: 70ch; }
+
+/* ---------- Cards ---------- */
+.card, .kpi {
+  background: linear-gradient(180deg, var(--card-a) 0%, var(--card-b) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 18px 40px -28px var(--shadow-card);
+}
+.card { padding: 20px; gap: 16px; transition: border-color 0.2s ease, transform 0.2s ease; }
+.card:hover { border-color: var(--border-strong); }
+.card-title { font-size: 15.5px; font-weight: 700; letter-spacing: -0.1px; }
+
+.kpi { padding: 18px; transition: transform 0.2s ease, border-color 0.2s ease; }
+.kpi:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+.kpi-label { font-size: 12px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
+.kpi-value { font-size: 27px; font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; }
+.kpi-hint { font-size: 12px; }
+
+.section-title { font-size: 15px; font-weight: 700; letter-spacing: 0.01em; color: var(--text-2); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  border-radius: 999px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 650;
+  border-color: var(--border-strong);
+  transition: transform 0.14s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.btn:hover { border-color: var(--lime); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: #0a0f00;
+  box-shadow: 0 8px 24px -12px rgba(201, 247, 60, 0.65);
+}
+.btn-primary:hover { background: #d4ff52; border-color: #d4ff52; box-shadow: 0 12px 30px -12px rgba(201, 247, 60, 0.8); }
+.btn-outline { border-color: rgba(201, 247, 60, 0.45); color: var(--lime); }
+.btn-sm { height: 32px; padding: 0 13px; font-size: 12.5px; }
+
+/* ---------- Inputs ---------- */
+.input { border-radius: 14px; background: var(--bg-surface); border-color: var(--border); }
+.input::placeholder { color: #6a6a6a; }
+.input:focus { outline: 2px solid rgba(201, 247, 60, 0.35); border-color: var(--lime); }
+.chip { border-radius: 999px; }
+.chip.on { background: var(--lime); border-color: var(--lime); color: #0a0f00; }
+
+/* ---------- Tables ---------- */
+.table-wrap { border-radius: 16px; border: 1px solid var(--border); overflow: auto; background: var(--bg-surface); }
+.table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.table td { border-top: 1px solid var(--border); }
+.table tbody tr { transition: background 0.14s ease; }
+.table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+
+/* ---------- Notices ---------- */
+.notice { border-radius: 16px; }
+.notice.info { background: rgba(56, 189, 248, 0.07); border-color: rgba(56, 189, 248, 0.28); }
+
+/* Focus ring for keyboard users, everywhere. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* A KPI is a grid cell: it must be able to shrink below its content width, or one
+   long figure (₹6,35,99,138) pushes the whole document sideways on a phone. */
+.kpi { min-width: 0; }
+.kpi-value { overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .kpi-value { font-size: 23px; }
+  .page-title { font-size: 25px; }
+}
+
+/* The status page prints long URLs and keys. Let them break instead of widening
+   the document on a phone. */
+.standalone { overflow-x: clip; }
+.standalone .kv { flex-wrap: wrap; gap: 4px 12px; }
+.standalone .mono { overflow-wrap: anywhere; min-width: 0; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Theme switch
+   Dark is the default and lives in :root. Light re-maps the same token names, so
+   every screen — portal, buyer, status — flips without a component knowing.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] {
+  /* Neon lime is unreadable on white, so light mode uses its ink: same hue, dark. */
+  --lime: #6f9400;
+  --lime-dim: #5c7a00;
+  --violet: #6d4bd8;
+
+  --bg-base: #f3f3ee;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-raised: #ecece4;
+  --border: #e0e0d5;
+  --border-strong: #c9c9bb;
+
+  --text: #0c0c0c;
+  --text-2: #232323;
+  --muted: #66665f;
+  --disabled: #9d9d94;
+
+  --amber: #b26a00;
+  --success: #128a3f;
+  --danger: #c62828;
+  --info: #0b6ea8;
+
+  --card-a: #ffffff;
+  --card-b: #fafaf4;
+  --bar-a: #ffffff;
+  --bar-b: #f6f6ef;
+  --shadow-card: rgba(0, 0, 0, 0.14);
+  --topbar-bg: rgba(255, 255, 255, 0.86);
+
+  color-scheme: light;
+}
+
+/* A few rules hard-coded a dark hover or a cyan wash; give them light variants. */
+[data-theme="light"] .btn-primary:hover {
+  background: #84ad00;
+  border-color: #84ad00;
+  box-shadow: 0 12px 30px -14px rgba(111, 148, 0, 0.7);
+}
+[data-theme="light"] .nav-item.active {
+  background: rgba(111, 148, 0, 0.12);
+}
+[data-theme="light"] body {
+  background:
+    radial-gradient(70% 45% at 12% -8%, rgba(111, 148, 0, 0.1), transparent 60%),
+    radial-gradient(60% 40% at 92% 4%, rgba(109, 75, 216, 0.08), transparent 62%),
+    var(--bg-base);
+}
+[data-theme="light"] .card,
+[data-theme="light"] .tile {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -20px rgba(0, 0, 0, 0.22);
+}
+
+/* The switch itself. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  flex: 0 0 auto;
+}
+.theme-toggle:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+  transform: translateY(-1px);
+}
+.theme-toggle:active {
+  transform: translateY(0) scale(0.97);
+}
+.theme-toggle > span:first-child {
+  font-size: 14px;
+  line-height: 1;
+}
+.theme-toggle-label {
+  letter-spacing: 0.02em;
+}
+
+/* The wipe: the incoming snapshot is clipped to a growing circle. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Real event artwork in place of the tint gradient. */
+.event-art-img { object-fit: cover; object-position: center 28%; height: 148px; width: 100%; }
+.hero-art { position: relative; overflow: hidden; padding: 0; }
+.hero-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.hero-scrim { position: absolute; inset: 0; }
+.hero-art { height: 260px; }
+
+/* ── Type ──────────────────────────────────────────────────────────────────
+   Inter Tight for everything structural, Instrument Serif for the italic accent
+   lines. Both are self-hosted by next/font, so there is no network request at
+   runtime and no layout shift while a font loads. */
+html,
+body {
+  font-family: var(--font-display), Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.page-title,
+.card-title,
+.kpi-value,
+.logo-word,
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), Inter, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Italic accent lines anywhere in the app. */
+.hero h1 em,
+.lp-hero h1 em,
+.bento-head h2 em,
+.rail-head h2 em,
+.cta-band h2 em {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-size: 1.06em;
+}
+
+/* Top-bar details that only made sense on a dark bar. */
+[data-theme="light"] .bell { color: #b03030; }
+[data-theme="light"] .mock-badge.mock {
+  background: #fdf3e0;
+  border-color: #e8c583;
+  color: #8a5a00;
+}
+[data-theme="light"] .mock-badge.live {
+  background: #e8f7ec;
+  border-color: #9fd4ae;
+  color: #12632f;
+}
+[data-theme="light"] .account-chip {
+  background: var(--bg-surface);
+  border-color: var(--border);
 }
