@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Card, Kpi, PageHeader, ProgressBar, Sparkline } from "@/components/ui";
+import { MockBadge, LiveBadge } from "@/components/MockBadge";
+import { LiveEventList, LiveEventTotals } from "@/components/LiveEventList";
 import {
   ACTIVITY,
   EVENTS,
@@ -11,7 +13,13 @@ import {
 } from "@/lib/organiser-data";
 import { inr, num, pct } from "@/lib/format";
 
-/** Organiser overview (PRD screen 15). */
+/**
+ * Organiser overview (PRD screen 15).
+ *
+ * The account-level totals are still mock: the backend has no endpoint for the
+ * signed-in organiser's own events, orders or revenue, so the badge says so.
+ * The live block lower down is read from `events` "list".
+ */
 export default function OrganiserOverview() {
   const t = totals();
   return (
@@ -20,11 +28,20 @@ export default function OrganiserOverview() {
         title="Welcome back, Organiser"
         subtitle="Here is what is happening with your events."
         actions={
-          <Link href="/organiser/create" className="btn btn-primary">
-            + Create new event
-          </Link>
+          <>
+            <MockBadge label="Account totals are mock" />
+            <LiveBadge label="Events are live" />
+            <Link href="/organiser/create" className="btn btn-primary">
+              + Create new event
+            </Link>
+          </>
         }
       />
+
+      <div className="section-title">Live, from the DEV backend</div>
+      <LiveEventTotals />
+
+      <div className="section-title">Your account — mock</div>
 
       <div className="grid-kpi">
         <Kpi label="Active events" value={num(t.active)} />
@@ -59,11 +76,13 @@ export default function OrganiserOverview() {
         })}
       </div>
 
+      <LiveEventList />
+
       <div className="grid-main">
-        <Card title="Ticket sales · last 30 days (Sunset Music Festival)">
+        <Card title="Ticket sales · last 30 days (Sunset Music Festival)" action={<MockBadge />}>
           <Sparkline values={SALES_SERIES} />
         </Card>
-        <Card title="Recent activity">
+        <Card title="Recent activity" action={<MockBadge />}>
           <ul className="list activity">
             {ACTIVITY.map((a) => (
               <li key={a.text}>
@@ -78,7 +97,7 @@ export default function OrganiserOverview() {
       </div>
 
       <div className="grid-2">
-        <Card title="Upcoming schedule">
+        <Card title="Upcoming schedule" action={<MockBadge />}>
           {SCHEDULE.map((s) => (
             <div key={s.title} className="schedule">
               <div className="date-chip">

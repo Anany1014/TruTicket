@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 
 /** Organisation details (new screen, PLAN §4). Legal and contact details for payouts and tax. */
 export default function Organisation() {
@@ -7,10 +8,15 @@ export default function Organisation() {
       <PageHeader
         title="Organisation details"
         subtitle="Legal and contact details. These appear on invoices, tickets, and payout statements."
-        actions={<Badge tone="success">Verified</Badge>}
+        actions={
+          <>
+            <MockBadge />
+            <Badge tone="success">Verified</Badge>
+          </>
+        }
       />
       <div className="grid-main">
-        <Card title="Legal entity">
+        <Card title="Legal entity" action={<MockBadge />}>
           <div className="grid-form">
             <Field label="Legal name" value="TruTicket Events Pvt. Ltd." />
             <Field label="Display name" value="TruTicket Events" />
@@ -20,7 +26,7 @@ export default function Organisation() {
             <Field label="Registered address" value="Plot 12, Sector 17, Vashi, Navi Mumbai 400703" full />
           </div>
         </Card>
-        <Card title="Contact">
+        <Card title="Contact" action={<MockBadge />}>
           <div className="grid-form">
             <Field label="Support email" value="support@truticket.in" />
             <Field label="Support phone" value="+91 22 0000 0000" />
@@ -28,7 +34,7 @@ export default function Organisation() {
           </div>
         </Card>
       </div>
-      <Card title="Signatories">
+      <Card title="Signatories" action={<MockBadge />}>
         <div className="table-wrap">
           <table className="table">
             <thead>

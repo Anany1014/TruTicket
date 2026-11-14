@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { USERS } from "@/lib/admin-data";
 
 const TONE = { Active: "success", Suspended: "danger", Pending: "warning" } as const;
@@ -7,7 +8,10 @@ const TONE = { Active: "success", Suspended: "danger", Pending: "warning" } as c
 export default function Users() {
   return (
     <>
-      <PageHeader title="User management" subtitle="Search, verify, suspend, and change roles. Every change is written to the audit log." />
+      <PageHeader title="User management"
+        subtitle="Search, verify, suspend, and change roles. Every change is written to the audit log."
+        actions={<MockBadge />}
+      />
       <Card title="Users">
         <div className="table-wrap">
           <table className="table">

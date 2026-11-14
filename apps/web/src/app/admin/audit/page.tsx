@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { AUDIT } from "@/lib/admin-data";
 
 const TONE = { Success: "success", Held: "warning", Blocked: "danger", Pending: "info" } as const;
@@ -7,7 +8,10 @@ const TONE = { Success: "success", Held: "warning", Blocked: "danger", Pending: 
 export default function Audit() {
   return (
     <>
-      <PageHeader title="Audit logs" subtitle="Append-only record of admin, system, and gate actions. Entries cannot be edited or deleted." />
+      <PageHeader title="Audit logs"
+        subtitle="Append-only record of admin, system, and gate actions. Entries cannot be edited or deleted."
+        actions={<MockBadge />}
+      />
       <Card title="Entries">
         <div className="table-wrap">
           <table className="table">

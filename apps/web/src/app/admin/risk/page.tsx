@@ -1,4 +1,5 @@
 import { Badge, Card, Kpi, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { RISK_EVENTS } from "@/lib/admin-data";
 
 const BAND = { LOW: "success", MEDIUM: "warning", HIGH: "danger" } as const;
@@ -9,7 +10,10 @@ export default function RiskQueue() {
   const high = RISK_EVENTS.filter((r) => r.band === "HIGH").length;
   return (
     <>
-      <PageHeader title="Risk events queue" subtitle="Flagged activity ranked by score. Start with HIGH band items." />
+      <PageHeader title="Risk events queue"
+        subtitle="Flagged activity ranked by score. Start with HIGH band items."
+        actions={<MockBadge />}
+      />
       <div className="grid-kpi">
         <Kpi label="Open events" value={String(open)} tone="info" />
         <Kpi label="High band" value={String(high)} tone="danger" />

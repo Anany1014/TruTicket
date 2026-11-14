@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { APPEALS } from "@/lib/admin-data";
 
 const STATUS = { Open: "info", "In review": "warning", Resolved: "success" } as const;
@@ -7,7 +8,10 @@ const STATUS = { Open: "info", "In review": "warning", Resolved: "success" } as 
 export default function Appeals() {
   return (
     <>
-      <PageHeader title="Appeal review" subtitle="Users can appeal a suspension, a device block, or a held transfer. Each appeal has a reviewer and a decision." />
+      <PageHeader title="Appeal review"
+        subtitle="Users can appeal a suspension, a device block, or a held transfer. Each appeal has a reviewer and a decision."
+        actions={<MockBadge />}
+      />
       <Card title="Appeals">
         <div className="table-wrap">
           <table className="table">

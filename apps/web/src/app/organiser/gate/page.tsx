@@ -1,9 +1,15 @@
 import { Badge, Card, Kpi, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { AuthorizeDevice } from "@/components/AuthorizeDevice";
 import { GATE_STAFF } from "@/lib/organiser-data";
 import { num } from "@/lib/format";
 
-/** Gate staff management (PRD screen 21). */
+/**
+ * Gate staff management (PRD screen 21).
+ *
+ * Still mock. The backend has no endpoint to list gate staff or to authorise a
+ * device for one. Scanning itself is a mobile capability (`scanner_verify`).
+ */
 export default function GateStaff() {
   const active = GATE_STAFF.filter((s) => s.status === "Active").length;
   const suspended = GATE_STAFF.filter((s) => s.status === "Suspended").length;
@@ -11,7 +17,11 @@ export default function GateStaff() {
 
   return (
     <>
-      <PageHeader title="Gate staff" subtitle="Sunset Music Festival 2025 · scanners and staff allowed to admit attendees" />
+      <PageHeader
+        title="Gate staff"
+        subtitle="Sunset Music Festival 2025 · scanners and staff allowed to admit attendees"
+        actions={<MockBadge />}
+      />
 
       <div className="grid-kpi">
         <Kpi label="Total staff" value={num(GATE_STAFF.length)} />
@@ -21,7 +31,7 @@ export default function GateStaff() {
       </div>
 
       <div className="grid-main">
-        <Card title="Authorised staff">
+        <Card title="Authorised staff" action={<MockBadge />}>
           <div className="table-wrap">
             <table className="table">
               <thead>

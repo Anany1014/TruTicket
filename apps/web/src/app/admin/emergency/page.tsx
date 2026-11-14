@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { EMERGENCY_ACTIONS } from "@/lib/admin-data";
 
 /** Emergency protocol (reference screen 30). PRD §21 risk fallbacks. Actions need two admins in Phase 2. */
@@ -8,7 +9,12 @@ export default function Emergency() {
       <PageHeader
         title="Emergency protocol"
         subtitle="Controls for incidents: a fake ticket wave, a venue safety issue, or a payment outage."
-        actions={<Badge tone="neutral">Mode: Off</Badge>}
+        actions={
+          <>
+            <MockBadge />
+            <Badge tone="neutral">Mode: Off</Badge>
+          </>
+        }
       />
       <div className="notice err">
         Emergency actions affect every live event. Each one needs a second admin to confirm, and each is logged in the audit trail.

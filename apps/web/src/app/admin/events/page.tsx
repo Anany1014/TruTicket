@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { EVENT_QUEUE } from "@/lib/admin-data";
 
 const STATE_TONE = { Published: "success", "Pending review": "warning", Paused: "danger" } as const;
@@ -7,7 +8,10 @@ const STATE_TONE = { Published: "success", "Pending review": "warning", Paused: 
 export default function Moderation() {
   return (
     <>
-      <PageHeader title="Event moderation" subtitle="Review events before they go on sale. Pausing an event stops checkout immediately." />
+      <PageHeader title="Event moderation"
+        subtitle="Review events before they go on sale. Pausing an event stops checkout immediately."
+        actions={<MockBadge />}
+      />
       <Card title="Moderation queue">
         <div className="table-wrap">
           <table className="table">

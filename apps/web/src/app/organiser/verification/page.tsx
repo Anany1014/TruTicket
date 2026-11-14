@@ -1,4 +1,5 @@
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { MockBadge } from "@/components/MockBadge";
 import { VERIFICATION_STEPS } from "@/lib/organiser-data";
 
 const TONE = { Done: "success", Pending: "warning", Waiting: "neutral" } as const;
@@ -9,8 +10,17 @@ export default function Verification() {
   const pct = Math.round((done / VERIFICATION_STEPS.length) * 100);
   return (
     <>
-      <PageHeader title="Verification status" subtitle="Complete these steps so your events can go on sale." />
-      <Card title={`${done} of ${VERIFICATION_STEPS.length} steps complete`} action={<Badge tone="info">{pct}%</Badge>}>
+      <PageHeader
+        title="Verification status"
+        subtitle="Complete these steps so your events can go on sale."
+        actions={<MockBadge />}
+      />
+      <Card title={`${done} of ${VERIFICATION_STEPS.length} steps complete`} action={
+          <>
+            <Badge tone="info">{pct}%</Badge>
+            <MockBadge />
+          </>
+        }>
         <div className="progress" aria-label={`${pct}% complete`}>
           <div className="progress-bar" style={{ width: `${pct}%`, background: "var(--cta)" }} />
         </div>
@@ -29,7 +39,7 @@ export default function Verification() {
           ))}
         </div>
       </Card>
-      <Card title="Why we check">
+      <Card title="Why we check" action={<MockBadge />}>
         <p className="small muted">
           Verification protects attendees from fake organisers and keeps payouts with the right business. Your documents
           are stored encrypted and used only for review.

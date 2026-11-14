@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card, Badge } from "./ui";
+import { MockBadge } from "./MockBadge";
 import { inr } from "@/lib/format";
 
 /**
@@ -22,9 +23,16 @@ export function ResaleCalc() {
   return (
     <div className="grid-main">
       <div className="stack">
-        <Card title="Maximum resale percentage" action={<Badge tone="success">Policy active</Badge>}>
-          <p className="small muted">Set the highest resale price, as a percentage of the original ticket price.</p>
-          <input
+        <Card
+          title="Maximum resale percentage"
+          action={
+            <div className="row">
+              <Badge tone="success">Policy active</Badge>
+              <MockBadge />
+            </div>
+          }
+        >
+          <p className="small muted">Set the highest resale price, as a percentage of the original ticket price.</p>          <input
             className="range"
             type="range"
             min={100}
@@ -56,7 +64,7 @@ export function ResaleCalc() {
           {!feeOk ? <div className="notice err">Platform fee must be between 1% and 3%.</div> : null}
         </Card>
 
-        <Card title="Policy details">
+        <Card title="Policy details" action={<MockBadge />}>
           <div className="grid-form">
             <div className="field">
               <label>Maximum transfer count</label>
@@ -94,7 +102,11 @@ export function ResaleCalc() {
           >
             Save policy
           </button>
-          {saved ? <span className="small t-success">Saved as a draft (demo). Policy goes on-chain in Phase 3.</span> : null}
+          {saved ? (
+            <span className="small t-success">
+              Saved as a draft (mock only). There is no policy endpoint yet, so nothing was written to the server.
+            </span>
+          ) : null}
         </div>
       </div>
 
