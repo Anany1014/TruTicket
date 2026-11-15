@@ -1,5 +1,6 @@
 # TruTicket 🎟️
 
+
 <div align="center">
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
@@ -61,11 +62,11 @@ TruTicket solves the primary failure modes of modern event ticketing (bot scalpi
    - Non-custodial and custodial ERC-721 ticket NFTs deployed on Polygon Amoy.
    - Protocol-level resale price ceilings (max 100%–200% face value) enforced directly inside the Solidity bytecode; secondary transactions above price caps revert automatically on-chain.
 
----
+-----
 
 ## 🏗️ System Architecture
 
-```
+``````
                        ┌────────────────────────────────────────────────────────┐
                        │                     CLIENT APPS                        │
                        └───────────────────┬────────────────────────────────────┘
